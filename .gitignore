@@ -1,0 +1,7 @@
+a.out
+*.pyc
+libtorrent.state
+*.s3db
+*.log
+tmp/
+config.json

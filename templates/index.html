@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{{ title }}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="" />
+        <meta name="keywords" content="" />
+        <meta property="og:title" content="" />
+        <meta property="og:type" content="" />
+        <meta property="og:url" content="" />
+        <meta property="og:image" content="" />
+        <meta property="og:site_name" content="" />
+        <meta property="og:description" content="" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}" />
+        <style>
+            body
+            {
+                padding-top: 70px;
+                padding-bottom:20px;
+                color: #cdcdcd;
+                position: relative;
+            }
+
+            .break {
+              -ms-word-break: break-all;
+              word-break: break-all;
+
+              /* Non standard for webkit */
+              word-break: break-word;
+
+              -webkit-hyphens: auto;
+              -moz-hyphens: auto;
+              hyphens: auto;
+            }
+        </style>
+        <script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='assets/js/bootstrap.min.js') }}"></script>
+        <script type="text/javascript">
+          function friendlyUnit(value, isSpeed)
+          {
+              units = [
+                  "B",
+                  "KB",
+                  "MB",
+                  "GB",
+                  "TB",
+              ];
+
+              if (value < 0)
+                  return "Unknown";
+              var i = 0;
+              while (value >= 1024. && i++ < 6)
+                  value /= 1024.;
+              var ret;
+              ret = (Math.floor(10 * value) / 10).toFixed(1) //Don't round up
+                      + " " + units[i];
+              if (isSpeed)
+                  ret += "/s";
+              return ret;
+          }
+
+          function search(query,offset,limit,category)
+          {
+            if(typeof category === "undefined")
+            {
+              category = "";
+            }
+
+            $("#pleaseWaitDialog").modal('show');
+
+            $.ajax({url: "/torrents",
+              type: "GET",
+              data: {q:query, offset:offset, limit:limit, category:category},
+              crossDomain: true,
+              dataType: "json",
+              success: function(response)
+              {
+                torrents = response.torrents;
+                count = response.count;
+                query = response.query;
+                offset = response.offset;
+                limit = response.limit;
+                category = response.category;
+
+                html = "";
+                if(category !== "")
+                {
+                  html += "<h2>Category: " + category + "</h2>";
+                } else {
+                  html += "<h2>Search: " + query + "</h2>";
+                }
+                html += '<table class="table table-hover table-bordered table-responsive">';
+                html += '<thead>';
+                html += '<th>Name</th>';
+                html += '<th>Files</th>';
+                html += '<th>Size</th>';
+                html += '<th>Category</th>';
+                html += '<th>Download</th>';
+                html += '</thead>';
+                html += '<tbody>';
+
+                for(i in torrents)
+                {
+                  torrent = torrents[i];
+                  html += "<tr>";
+                  html += "<td class='torrent' data-hash='" + torrent.info_hash + "'>" + torrent.name + "</td>";
+                  html += "<td>" + torrent.num_files + "</td>";
+                  html += "<td>" + friendlyUnit(torrent.size) + "</td>";
+                  html += "<td>" + torrent.category + "</td>";
+                  html += '<td>';
+                  html += '<a href="' + torrent.magnet_link + '"><i class="glyphicon glyphicon-magnet"></i></a>';
+                  html += '&nbsp;<a href="torrents/' + torrent.info_hash + '.torrent"><i class="glyphicon glyphicon-file"></i></a>';
+                  html += "</td>";
+                  html += "</tr>";
+                }
+
+                html += '</tbody>';
+                html += '</table>';
+
+                html += '<nav style="text-align:center;">';
+                html += '<ul class="pagination">';
+
+                pages = Math.ceil(count/limit);
+                for(var i=0; i < pages; i++)
+                {
+                  var page_num = i+1;
+                  var new_offset = limit*i+1;
+                  html += '<li><a href="#" class="page" data-query="' + query +
+                  '" data-limit="' + limit + '" data-offset="' + new_offset +
+                  '" data-category="' + category + '">' + page_num + '</a></li>';
+                }
+                html += '</ul>';
+                html += '</nav>';
+
+                $("#main").html(html);
+                $("#pleaseWaitDialog").modal('hide');
+              },
+              error: function()
+              {
+                $("#pleaseWaitDialog").modal('hide');
+              }
+            });
+          }
+
+          function show_torrent(info_hash)
+          {
+            $("#pleaseWaitDialog").modal('show');
+
+            $.ajax({url: "/torrents/" + info_hash + "/files",
+              type: "GET",
+              crossDomain: true,
+              dataType: "json",
+              success: function(response)
+              {
+                torrent = response;
+
+                html = "<h2 class='break'>" + torrent.name + "</h2><br />";
+
+                html += '<a href="' + torrent.magnet_link + '" class="btn btn-primary btn-lg"><i class="glyphicon glyphicon-magnet"></i> Magnet Link</a>';
+                html += '&nbsp;<a href="torrents/' + torrent.info_hash + '.torrent" class="btn btn-primary btn-lg"><i class="glyphicon glyphicon-file"></i> Torrent File</a>';
+
+                html += "<h3>Files</h3>";
+
+                html += '<table class="table table-hover table-bordered table-responsive">';
+                html += '<thead>';
+                html += '<th width="80%">Name</th>';
+                html += '<th width="20%">Size</th>';
+                html += '</thead>';
+                html += '<tbody>';
+                for(j in torrent.files)
+                {
+                  file = torrent.files[j];
+                  html += "<tr>";
+                  html += "<td>" + file.path + "</td>";
+                  html += "<td>" + friendlyUnit(file.size) + "</td>";
+                  html += "</tr>";
+                }
+
+                html += '</tbody>';
+                html += '</table>';
+
+                $("#main").html(html);
+                $("#pleaseWaitDialog").modal('hide');
+              },
+              error: function()
+              {
+                $("#pleaseWaitDialog").modal('hide');
+              }
+            });
+          }
+
+          $(document).ready(function()
+          {
+            $("#search-form").on("submit", function(e)
+            {
+              e.preventDefault();
+              search($("#query").val(),0,100);
+              $("#query").val("");
+            });
+
+            $(document).on("click", ".page", function(e)
+            {
+              e.preventDefault();
+              var query = $(this).data("query");
+              var offset = $(this).data("offset");
+              var limit = $(this).data("limit");
+              var category = $(this).data("category");
+              search(query,offset,limit,category);
+            });
+
+            $(".navbar-nav li").on("click", function(e)
+            {
+              e.preventDefault();
+              category = $(this).children("a").attr("href").substring(1);
+              if(category == "all")
+              {
+                search("",0,100,"");
+              }
+              else if(category != "")
+              {
+                search("",0,100,category);
+              }
+            });
+
+            $(".panel-title > a").on("click", function(e)
+            {
+              e.preventDefault();
+              category = $(this).attr("href").substring(1);
+              if(category != "")
+              {
+                search("",0,100,category);
+              }
+            });
+
+            $(".list-group-item > a").on("click", function(e)
+            {
+              e.preventDefault();
+              show_torrent($(this).data("hash"));
+            });
+
+            $(document).on("click", ".torrent", function(e)
+            {
+              e.preventDefault();
+              show_torrent($(this).data("hash"));
+            });
+          });
+        </script>
+    </head>
+    <body data-spy="scroll" data-target="#navbar">
+        <nav class="navbar navbar-default navbar-fixed-top" id="navbar">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="/">
+                        {{ title }}
+                    </a>
+                </div>
+
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                      <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span> Videos <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                          <li><a href="#movie">Movies</a></li>
+                          <li><a href="#tvshow">TV Shows</a></li>
+                          <li><a href="#xxx"><span class="glyphicon glyphicon-fire" aria-hidden="true"></span> XXX</a></li>
+                          <li><a href="#video">Uncategorized</a></li>
+                        </ul>
+                      </li>
+                      <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span class="glyphicon glyphicon-music" aria-hidden="true"></span> Audio <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                          <li><a href="#music">Music</a></li>
+                          <li><a href="#audiobook">Audiobooks</a></li>
+                          <li><a href="#audio">Uncategorized</a></li>
+                        </ul>
+                      </li>
+                      <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span class="glyphicon glyphicon-flash" aria-hidden="true"></span> Applications <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                          <li><a href="#windows">Windows</a></li>
+                          <li><a href="#macos">Mac OS</a></li>
+                          <li><a href="#linux">Linux</a></li>
+                          <li><a href="#application">Uncategorized</a></li>
+                        </ul>
+                      </li>
+                      <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span class="glyphicon glyphicon-cloud" aria-hidden="true"></span> Other <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                          <li><a href="#image"><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> Images</a></li>
+                          <li><a href="#documents"><span class="glyphicon glyphicon-book" aria-hidden="true"></span> Documents</a></li>
+                          <li><a href="#iso"><span class="glyphicon glyphicon-cd" aria-hidden="true"></span> ISOs</a></li>
+                          <li><a href="#vm"><span class="glyphicon glyphicon-hdd" aria-hidden="true"></span> VMs</a></li>
+                          <li><a href="#unknown">Uncategorized</a></li>
+                        </ul>
+                      </li>
+                      <li><a href="#all"><span class="glyphicon glyphicon-globe" aria-hidden="true"></span> All</a></li>
+                    </ul>
+                    <form class="navbar-form navbar-right" role="search" id="search-form">
+                    <div class="form-group">
+                      <input type="text" id="query" class="form-control" placeholder="Search">
+                    </div>
+                    <button type="submit" id="search" class="btn btn-default"><i class="glyphicon glyphicon-search"></i> Search</button>
+                  </form>
+                </div>
+            </div>
+        </nav>
+        <div class="container" id="main">
+          <h1>{{ title }}</h1>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h3 class="panel-title"><a href="#movie">Movies</a></h3>
+                </div>
+                <ul class="list-group">
+                  {% for item in samples["movie"] %}
+                      <li class="list-group-item break"><a href="#" data-hash="{{ item['info_hash'] }}">{{ item['name'].decode('latin1') }}</a></li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h3 class="panel-title"><a href="#tvshow">TV Shows</a></h3>
+                </div>
+                <ul class="list-group">
+                  {% for item in samples["tvshow"] %}
+                      <li class="list-group-item break"><a href="#" data-hash="{{ item['info_hash'] }}">{{ item['name'].decode('latin1') }}</a></li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h3 class="panel-title"><a href="#music">Music</a></h3>
+                </div>
+                <ul class="list-group">
+                  {% for item in samples["music"] %}
+                      <li class="list-group-item break"><a href="#" data-hash="{{ item['info_hash'] }}">{{ item['name'].decode('latin1') }}</a></li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal" id="pleaseWaitDialog" data-backdrop="static" data-keyboard="false">
+          <div class="modal-content">
+            <div class="modal-header">
+                <h1>Searching...</h1>
+            </div>
+            <div class="modal-body">
+                <div class="progress progress-striped active">
+                    <div class="bar" style="width: 100%;"></div>
+                </div>
+            </div>
+          </div>
+        </div>
+    </body>
+</html>

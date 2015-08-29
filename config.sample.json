@@ -1,0 +1,27 @@
+{
+  "db":
+  {
+    "sqlite3": "database.s3db",
+    "mysql": {
+      "host": "127.0.0.1",
+      "user": "metadata",
+      "passwd": "",
+      "db": "metadata"
+    }
+  },
+  "share":
+  {
+    "authorized":
+    {
+      "1234567890": { "push": true },
+      "0987654321": { "push": true }
+    },
+    "push_to": [
+      {
+        "auth": "ABCDEFGHIJ",
+        "url": "http://192.168.1.205:11000/push",
+        "period": 300
+      }
+    ]
+  }
+}
