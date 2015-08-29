@@ -27,17 +27,12 @@ Without specifing host and port, the default web ui location is `http://127.0.0.
 On Debian/Ubuntu/Linux Mint/Fedora, the dependencies can be installed
 with the `prereqs.sh` script or by running `make prereqs`
 
-### Python
-
-### Flask
-
-### Tornado
-
-### Requests
-
-### libtorrent-rasterbar
-
-### Python bindings for libtorrent-rasterbar
+* Python
+* Flask
+* Tornado
+* Requests
+* libtorrent-rasterbar
+* Python bindings for libtorrent-rasterbar
 
 ## Configuration
 Configuration is in the `config.json` file. See `config.sample.json` for details.
