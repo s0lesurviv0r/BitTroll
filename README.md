@@ -32,7 +32,7 @@ Configuration is in the `config.json` file. See `config.sample.json` for details
 
 ### Database
 For the database, SQLite3 is used if no database setting is found. When specifying a
-database to use, only put that entry in (only mysql or sqlite3).
+database to use, only put that entry in (only `mysql` or `sqlite3`).
 
 BitTroll will create the database structure when `--init` is passed on the command line.
 **Database needs to be initialized before BitTroll can start.**
@@ -43,7 +43,7 @@ without sharing a common database. This feature allows the pushing node (sender)
 to receiving node by calling a RESTful API endpoint on the receiving node.
 
 ### Web UI
-The web ui supplied in BitTroll is contained in a single `index.html` file. It uses the
+The Web UI supplied in BitTroll is contained in a single `index.html` file. It uses the
 RESTful API to communicate with the BitTroll backend. The `index.html` file is in the `templates`
 folder and could be easily replaced with something to suit your needs. Additionally, custom
 web interfaces can be written to utilize BitTroll's RESTful API.
@@ -51,7 +51,7 @@ web interfaces can be written to utilize BitTroll's RESTful API.
 ## Running
 See command line help with `python main.py -h`
 
-To start BitTroll with DHT scraping, RESTful API, and Web UI:
+To start BitTroll with Metadata scraping, RESTful API, and Web UI:
 
 1. `python main.py --init`
 
@@ -166,7 +166,7 @@ http {
         listen 80;
 
         location / {
-            proxy_pass http://bittroll_webuis;
+            proxy_pass http://bittroll_webuis:11000;
         }
     }
 }
