@@ -146,27 +146,25 @@ A sample load balancing nginx configuration would look like:
 
 ```
 http {
-    listen 80;
-    server_name mybittorrentsearchengine.com
-
-    index index.html;
-
     upstream bittroll_webuis {
         # Node 1
-        server 192.168.1.100;
+        server 192.168.1.100:11000;
 
         # Node 2
-        server 192.168.1.101;
+        server 192.168.1.101:11000;
 
         # Node 3
-        server 192.168.1.102;
+        server 192.168.1.102:11000;
     }
 
     server {
         listen 80;
+        server_name mybittorrentsearchengine.com
+
+        index index.html;
 
         location / {
-            proxy_pass http://bittroll_webuis:11000;
+            proxy_pass http://bittroll_webuis;
         }
     }
 }
