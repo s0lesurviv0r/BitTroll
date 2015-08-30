@@ -6,8 +6,12 @@
 * Daemonize
 
 # Important
-* Caching and HOWTO for nginx caching
-* Add torrent file in UI
+* Add torrent file feature in UI
+
+# Low-priority
+* HOWTO for nginx caching
 
 # Future
+* Generate screenshots of video files
 * Leech and seed count
+* Tit-for-tat torrent file exchange through some sort of P2P mechanism

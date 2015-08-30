@@ -42,6 +42,12 @@ This feature will be improved and documented soon. This allows instances to shar
 without sharing a common database. This feature allows the pushing node (sender) to share metadata
 to receiving node by calling a RESTful API endpoint on the receiving node.
 
+### Web UI
+The web ui supplied in BitTroll is contained in a single `index.html` file. It uses the
+RESTful API to communicate with the BitTroll backend. The `index.html` file is in the `templates`
+folder and could be easily replaced with something to suit your needs. Additionally, custom
+web interfaces can be written to utilize BitTroll's RESTful API.
+
 ## Running
 See command line help with `python main.py -h`
 
@@ -140,8 +146,35 @@ This will start the web ui and scraping on each node.
 A sample load balancing nginx configuration would look like:
 
 ```
+http {
+    listen 80;
+    server_name mybittorrentsearchengine.com
 
+    index index.html;
+
+    upstream bittroll_webuis {
+        # Node 1
+        server 192.168.1.100;
+
+        # Node 2
+        server 192.168.1.101;
+
+        # Node 3
+        server 192.168.1.102;
+    }
+
+    server {
+        listen 80;
+
+        location / {
+            proxy_pass http://bittroll_webuis;
+        }
+    }
+}
 ```
+
+Note: It's a good idea to use nginx caching for certain things (queries, torrent files, etc) if you
+expect high traffic.
 
 ## RESTful API
 
