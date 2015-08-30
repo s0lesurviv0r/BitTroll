@@ -378,7 +378,7 @@ class Database:
                 random_function = "RANDOM()" if Database._db_type == "sqlite3" else "RAND()"
 
                 c.execute('''
-                    SELECT info_hash FROM torrents WHERE classifier_version < {0} ORDER BY {1} LIMIT 50
+                    SELECT info_hash FROM torrents WHERE classifier_version < {0} OR classifier_version IS NULL ORDER BY {1} LIMIT 50
                 '''.format(Database._placeholder, random_function), (Classifier.version,))
                 torrents = c.fetchall()
 

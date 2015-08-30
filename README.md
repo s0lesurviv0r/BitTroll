@@ -12,7 +12,7 @@ BitTroll attempts to classify torrents into categories using a basic classificat
 A web UI for searching the data is available.
 
 Data can be stored in either MySQL or SQLite3 (default). BitTroll will create the database structure
-when `--init` is passed on the command line. Database needs to be initialized before BitTroll can start
+when `--init` is passed on the command line. Database needs to be initialized before BitTroll can start.
 
 To start BitTroll with DHT scraping and RESTful API, run:
 
