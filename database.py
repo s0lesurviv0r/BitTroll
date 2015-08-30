@@ -124,6 +124,7 @@ class Database:
     def add(meta):
         hash = Database.convert_info_hash(meta.info_hash())
 
+        # @todo Add trackers to magnet link
         magnet_link = "magnet:?xt=urn:btih:" + hash.upper()
 
         if Database.exists(hash):
@@ -379,6 +380,7 @@ class Database:
 
     @staticmethod
     def _reclassify_thread():
+        Database.logger.debug("Started classification thread")
         while Database._running:
             try:
                 conn = Database.get_conn()
@@ -393,7 +395,7 @@ class Database:
 
                 if torrents is not None:
                     for torrent in torrents:
-
+                        Database.classify(torrent[0])
 
                 conn.close()
             except:
@@ -403,6 +405,7 @@ class Database:
 
     @staticmethod
     def _leech_seed_thread():
+        Database.logger.debug("Started seeders/leachers count thread")
         while Database._running:
             try:
                 conn = Database.get_conn()
@@ -411,7 +414,7 @@ class Database:
                 random_function = "RANDOM()" if Database._db_type == "sqlite3" else "RAND()"
 
                 c.execute('''
-                    SELECT info_hash FROM torrents WHERE leech_seed_updated + 3600 < {0} OR leech_seed_updated IS NULL ORDER BY {1} LIMIT 50
+                    SELECT info_hash, magnet_link FROM torrents WHERE leech_seed_updated + 3600 < {0} OR leech_seed_updated IS NULL ORDER BY {1} LIMIT 50
                 '''.format(Database._placeholder, random_function), (time.time(),))
                 torrents = c.fetchall()
 
@@ -425,16 +428,20 @@ class Database:
                             "leechers": 0
                         }
 
+                # @todo Parse magnet link for tracker to parse
                 trackers = [
-                    "udp://open.demonii.com:1337/announce",
-                    "udp://tracker.coppersurfer.tk:6969/announce",
-                    "udp://tracker.leechers-paradise.org:6969/announce",
-                    "udp://tracker.openbittorrent.com:80/announce"
+                    "udp://tracker.openbittorrent.com:80",
+                    "udp://open.demonii.com:1337",
+                    "udp://tracker.coppersurfer.tk:6969",
+                    "udp://tracker.leechers-paradise.org:6969",
+                    "http://9.rarbg.com:2710",
+                    "udp://tracker.blackunicorn.xyz:6969",
+                    "udp://tracker.internetwarriors.net:1337"
                 ]
 
                 for tracker in trackers:
                     try:
-                        r = scrape(tracker, counts.leys())
+                        r = scrape(tracker, counts.keys())
                         for info_hash in r.keys():
                             counts[info_hash]["seeders"] += r[info_hash]["seeds"]
                             counts[info_hash]["leechers"] += r[info_hash]["peers"]
@@ -445,7 +452,7 @@ class Database:
                     c.execute('''
                         UPDATE torrents SET seeders = {0}, leechers = {0}, leech_seed_updated = {0} WHERE info_hash = {0}
                     '''.format(Database._placeholder), (counts[info_hash]["seeders"], counts[info_hash]["leechers"], time.time(), info_hash,))
-                    c.commit()
+                    conn.commit()
                     Database.logger.debug("Update seeders/leachers count: (%s)" % info_hash)
 
                 conn.close()

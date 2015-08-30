@@ -25,8 +25,11 @@ class Metadata:
         "udp://open.demonii.com:1337",
         "udp://tracker.coppersurfer.tk:6969",
         "udp://tracker.leechers-paradise.org:6969",
-        "http://9.rarbg.com:2710/announce",
-        "udp://tracker.istole.it:80/announce"
+        "http://9.rarbg.com:2710",
+        "udp://tracker.istole.it:80",
+        "udp://open.demonii.com:1337",
+        "udp://tracker.blackunicorn.xyz:6969",
+        "udp://tracker.internetwarriors.net:1337"
     ]
 
     for tracker in trackers:

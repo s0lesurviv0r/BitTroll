@@ -1,4 +1,5 @@
 # Critical
+* Add trackers to magnet links and parse magnet links to get trackers to scrape
 * Push to Torcache feature
 * Double output messages bug
 * Concurrency considerations
