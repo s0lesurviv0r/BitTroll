@@ -236,7 +236,7 @@ class Metadata:
     def _scrape_torcache(hash):
         try:
             url = "http://torcache.net/torrent/" + hash.upper() + ".torrent"
-            r = requests.get(url, headers={"User-agent": "TorrentSeek"})
+            r = requests.get(url, headers={"User-agent": "BitTroll"})
             if r.status_code == 200:
                 data = lt.bdecode(r.content)
                 info = lt.torrent_info(data)

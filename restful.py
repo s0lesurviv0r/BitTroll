@@ -74,7 +74,7 @@ class API():
 
                 # @todo Render with query results
 
-            return render_template("index.html", title="Torrent Search", samples=API._cache["samples"])
+            return render_template("index.html", title="BitTroll", samples=API._cache["samples"])
         else:
             return "Web UI has been disabled", 404
 
@@ -238,8 +238,3 @@ class API():
                     Database.add(info)
                 except Exception as e:
                     API.logger.debug("Failed to add metadata (%s)" % e.__str__())
-
-    @staticmethod
-    @app.route('/torrents/pull', methods=['POST'])
-    def pull():
-        return "Not implemented", 500
