@@ -222,7 +222,7 @@ class Database:
             FROM torrents
             WHERE (torrents.name LIKE {0} OR torrents.info_hash LIKE {0})
             AND torrents.category LIKE {0}
-            ORDER BY torrents.seeders + torrents.leechers
+            ORDER BY torrents.seeders + torrents.leechers DESC
             LIMIT {1} OFFSET {2}
         '''.format(Database._placeholder, int(limit), int(offset)), (matcher, matcher, category,))
 
