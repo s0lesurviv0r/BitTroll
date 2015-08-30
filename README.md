@@ -13,7 +13,7 @@ BitTroll attempts to classify torrents into categories using a basic classificat
 
 BitTroll can be store data in either MySQL or SQLite3 (default).
 
-BitTroll can search a web UI to search torrent data and/or serve a RESTful API to access the data.
+BitTroll can serve a web UI to search torrent data and/or serve a RESTful API to access the data.
 
 ## Dependencies
 
