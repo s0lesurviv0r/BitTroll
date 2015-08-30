@@ -15,6 +15,7 @@ import re
 from classifier import Classifier
 from config import Config
 from threading import Thread
+from tracker_scraper import *
 
 class Database:
     logger = logging.getLogger("Database")
@@ -26,6 +27,11 @@ class Database:
     def start():
         # Start reclassification loop
         t = Thread(target=Database._reclassify_thread)
+        t.daemon = True
+        t.start()
+
+        # Start seed/leech count loop
+        t = Thread(target=Database._leech_seed_thread)
         t.daemon = True
         t.start()
 
@@ -76,7 +82,8 @@ class Database:
             info_hash VARCHAR(255), size {4}, comment VARCHAR(1024),
             creator VARCHAR(1024), magnet_link VARCHAR(1024), category VARCHAR(255),
             perm_category VARCHAR(255), tags VARCHAR(1024),
-            classifier_version {0}, num_files {0}{3})
+            classifier_version {0}, num_files {0}, leechers {0}, seeders {0},
+            leech_seed_updated {0}{3})
         '''.format(int_type, sqlite_prime, autoinc_type, mysql_prime, bigint_type))
 
         mysql_prime = "" if Database._db_type == "sqlite3" else ", PRIMARY KEY (torrentFileID)"
@@ -207,14 +214,14 @@ class Database:
         if category == "":
             category = "%"
 
-        # @todo Should only use hits and last heard time for categories and
-        # alphabetical order for queries
         c.execute('''
             SELECT torrents.name, torrents.info_hash, torrents.magnet_link,
-            torrents.category, torrents.tags, torrents.size, torrents.num_files
+            torrents.category, torrents.tags, torrents.size, torrents.num_files,
+            torrents.seeders, torrents.leechers
             FROM torrents
             WHERE (torrents.name LIKE {0} OR torrents.info_hash LIKE {0})
             AND torrents.category LIKE {0}
+            ORDER BY torrents.seeders + torrents.leechers
             LIMIT {1} OFFSET {2}
         '''.format(Database._placeholder, int(limit), int(offset)), (matcher, matcher, category,))
 
@@ -239,7 +246,9 @@ class Database:
                 "category": torrent[3],
                 "tags": tags,
                 "size": torrent[5],
-                "num_files": torrent[6]
+                "num_files": torrent[6],
+                "seeders": torrent[7],
+                "leechers": torrent[8]
             }
             torrents.append(t)
 
@@ -384,11 +393,64 @@ class Database:
 
                 if torrents is not None:
                     for torrent in torrents:
-                        Database.classify(torrent[0])
+
 
                 conn.close()
             except:
                 pass
+
+            time.sleep(10)
+
+    @staticmethod
+    def _leech_seed_thread():
+        while Database._running:
+            try:
+                conn = Database.get_conn()
+                c = conn.cursor()
+
+                random_function = "RANDOM()" if Database._db_type == "sqlite3" else "RAND()"
+
+                c.execute('''
+                    SELECT info_hash FROM torrents WHERE leech_seed_updated + 3600 < {0} OR leech_seed_updated IS NULL ORDER BY {1} LIMIT 50
+                '''.format(Database._placeholder, random_function), (time.time(),))
+                torrents = c.fetchall()
+
+                counts = {}
+
+                if torrents is not None:
+                    for torrent in torrents:
+                        info_hash = torrent[0]
+                        counts[info_hash] = {
+                            "seeders": 0,
+                            "leechers": 0
+                        }
+
+                trackers = [
+                    "udp://open.demonii.com:1337/announce",
+                    "udp://tracker.coppersurfer.tk:6969/announce",
+                    "udp://tracker.leechers-paradise.org:6969/announce",
+                    "udp://tracker.openbittorrent.com:80/announce"
+                ]
+
+                for tracker in trackers:
+                    try:
+                        r = scrape(tracker, counts.leys())
+                        for info_hash in r.keys():
+                            counts[info_hash]["seeders"] += r[info_hash]["seeds"]
+                            counts[info_hash]["leechers"] += r[info_hash]["peers"]
+                    except:
+                        pass
+
+                for info_hash in counts.keys():
+                    c.execute('''
+                        UPDATE torrents SET seeders = {0}, leechers = {0}, leech_seed_updated = {0} WHERE info_hash = {0}
+                    '''.format(Database._placeholder), (counts[info_hash]["seeders"], counts[info_hash]["leechers"], time.time(), info_hash,))
+                    c.commit()
+                    Database.logger.debug("Update seeders/leachers count: (%s)" % info_hash)
+
+                conn.close()
+            except:
+                raise
 
             time.sleep(10)
 

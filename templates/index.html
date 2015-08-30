@@ -95,6 +95,8 @@
                 html += '<th>Files</th>';
                 html += '<th>Size</th>';
                 html += '<th>Category</th>';
+                html += '<th>Seed</th>';
+                html += '<th>Leech</th>';
                 html += '<th>Download</th>';
                 html += '</thead>';
                 html += '<tbody>';
@@ -107,6 +109,8 @@
                   html += "<td>" + torrent.num_files + "</td>";
                   html += "<td>" + friendlyUnit(torrent.size) + "</td>";
                   html += "<td>" + torrent.category + "</td>";
+                  html += "<td>" + torrent.seeders + "</td>";
+                  html += "<td>" + torrent.leechers + "</td>";
                   html += '<td>';
                   html += '<a href="' + torrent.magnet_link + '"><i class="glyphicon glyphicon-magnet"></i></a>';
                   html += '&nbsp;<a href="torrents/' + torrent.info_hash + '.torrent"><i class="glyphicon glyphicon-file"></i></a>';
