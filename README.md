@@ -1,7 +1,7 @@
 # BitTroll
 
 BitTroll is an open source BitTorrent DHT scraper and search engine. BitTroll listens
-to the BitTorrent Mainline DHT for torrent info hashes and then trys to resolve the
+to the BitTorrent Mainline DHT for torrent info hashes and then tries to resolve the
 torrent's metadata (file names, torrent titles, file sizes, etc) to store for purposes of indexing/searching.
 
 BitTroll works on Debian/Ubuntu/Fedora/Mac OS X but can be easily adapted to work on Windows (this is planned for the future).
@@ -18,7 +18,7 @@ BitTroll can search a web UI to search torrent data and/or serve a RESTful API t
 ## Dependencies
 
 On Debian/Ubuntu/Linux Mint/Fedora/Mac OS, the dependencies can be installed
-with the `prereqs.sh` script or by running `make prereqs`
+with the `prereqs.sh` script or by running `make prereqs`.
 
 * Python
 * Flask
@@ -60,7 +60,6 @@ To start BitTroll with DHT scraping, RESTful API, and Web UI:
 Without specifing the host (`--host=`) and the port (`--port=`), the default web ui location is `http://127.0.0.1:11000`
 
 ### Running a cluster
-There are several ways of running a BitTroll cluster. There are limitless combinations.
 Several command line arguments come into focus when running a cluster:
 
 `--ui` - Tells BitTroll to serve the Web UI on the specified/default host and port (This automatically invokes `--api`)
@@ -200,7 +199,7 @@ Returns the files for the torrent under the specified info hash.
 
 ## Compiling into standalone binary
 PyInstaller can be used to generate a stand alone binary of BitTroll. The feature
-is still under testing but a build can be involved with `make dist`
+is still under testing but a build can be involved with `make dist`.
 
 ## License
 Copyright (C) 2015  Jacob Zelek <jacob@jacobzelek.com>
