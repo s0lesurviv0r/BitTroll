@@ -406,6 +406,10 @@ class Database:
     @staticmethod
     def _leech_seed_thread():
         Database.logger.debug("Started seeders/leachers count thread")
+        timeout = 3600
+        if Config.get_key("seed_leech_interval") is not None:
+            timeout = Config.get_key("seed_leech_interval")
+
         while Database._running:
             try:
                 conn = Database.get_conn()
@@ -414,8 +418,8 @@ class Database:
                 random_function = "RANDOM()" if Database._db_type == "sqlite3" else "RAND()"
 
                 c.execute('''
-                    SELECT info_hash, magnet_link FROM torrents WHERE leech_seed_updated + 3600 < {0} OR leech_seed_updated IS NULL ORDER BY {1} LIMIT 50
-                '''.format(Database._placeholder, random_function), (time.time(),))
+                    SELECT info_hash, magnet_link FROM torrents WHERE leech_seed_updated + {0} < {0} OR leech_seed_updated IS NULL ORDER BY {1} LIMIT 50
+                '''.format(Database._placeholder, random_function), (timeout, time.time(),))
                 torrents = c.fetchall()
 
                 counts = {}
@@ -428,32 +432,33 @@ class Database:
                             "leechers": 0
                         }
 
-                # @todo Parse magnet link for tracker to parse
-                trackers = [
-                    "udp://tracker.openbittorrent.com:80",
-                    "udp://open.demonii.com:1337",
-                    "udp://tracker.coppersurfer.tk:6969",
-                    "udp://tracker.leechers-paradise.org:6969",
-                    "http://9.rarbg.com:2710",
-                    "udp://tracker.blackunicorn.xyz:6969",
-                    "udp://tracker.internetwarriors.net:1337"
-                ]
+                if len(counts.keys()) > 0:
+                    # @todo Parse magnet link for tracker to parse
+                    trackers = [
+                        "udp://tracker.openbittorrent.com:80",
+                        "udp://open.demonii.com:1337",
+                        "udp://tracker.coppersurfer.tk:6969",
+                        "udp://tracker.leechers-paradise.org:6969",
+                        "http://9.rarbg.com:2710",
+                        "udp://tracker.blackunicorn.xyz:6969",
+                        "udp://tracker.internetwarriors.net:1337"
+                    ]
 
-                for tracker in trackers:
-                    try:
-                        r = scrape(tracker, counts.keys())
-                        for info_hash in r.keys():
-                            counts[info_hash]["seeders"] += r[info_hash]["seeds"]
-                            counts[info_hash]["leechers"] += r[info_hash]["peers"]
-                    except:
-                        pass
+                    for tracker in trackers:
+                        try:
+                            r = scrape(tracker, counts.keys())
+                            for info_hash in r.keys():
+                                counts[info_hash]["seeders"] += r[info_hash]["seeds"]
+                                counts[info_hash]["leechers"] += r[info_hash]["peers"]
+                        except:
+                            pass
 
-                for info_hash in counts.keys():
-                    c.execute('''
-                        UPDATE torrents SET seeders = {0}, leechers = {0}, leech_seed_updated = {0} WHERE info_hash = {0}
-                    '''.format(Database._placeholder), (counts[info_hash]["seeders"], counts[info_hash]["leechers"], time.time(), info_hash,))
-                    conn.commit()
-                    Database.logger.debug("Update seeders/leachers count: (%s)" % info_hash)
+                    for info_hash in counts.keys():
+                        c.execute('''
+                            UPDATE torrents SET seeders = {0}, leechers = {0}, leech_seed_updated = {0} WHERE info_hash = {0}
+                        '''.format(Database._placeholder), (counts[info_hash]["seeders"], counts[info_hash]["leechers"], time.time(), info_hash,))
+                        conn.commit()
+                        Database.logger.debug("Update seeders/leachers count: (%s)" % info_hash)
 
                 conn.close()
             except:

@@ -1,4 +1,5 @@
 {
+  "seed_leech_interval": 21600,
   "db":
   {
     "sqlite3": "database.s3db",

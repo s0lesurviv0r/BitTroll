@@ -4,6 +4,7 @@ if hash apt-get 2>/dev/null; then
       sudo apt-get install python-libtorrent python-pip python-mysqldb python-flask python-requests python-tornado python-setuptools
       sudo easy_install pip
       sudo pip install bcode
+      sudo pip install python-memcached
     fi
 elif hash yum 2>/dev/null; then
       sudo yum update
@@ -13,6 +14,7 @@ elif hash yum 2>/dev/null; then
       sudo pip install tornado
       sudo pip install requests
       sudo pip install bcode
+      sudo pip install python-memcached
 elif hash brew 2>/dev/null; then
       brew update
       brew install boost --build-from-source --with-python
@@ -21,4 +23,5 @@ elif hash brew 2>/dev/null; then
       sudo pip install tornado
       sudo pip install requests
       sudo pip install bcode
+      sudo pip install python-memcached
 fi

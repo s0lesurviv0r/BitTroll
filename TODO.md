@@ -5,12 +5,15 @@
 * Daemonize
 * Back button in Web UI
 * Break long torrent titles
-* Make tracker scape interval user configurable
 * Make share interval user configurable
+* Store seeds/leeches in memcached to avoid using disk
+* Store top queries in memcached
 
 # Important
 * Add torrent file feature in UI
 * Make pagination buttons scroll to top
+* Mobile optimized
+* Show seeds/leeches in file view
 
 # Low-priority
 * HOWTO for nginx caching
