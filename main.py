@@ -27,7 +27,7 @@ def signal_handler(signal, frame):
 def usage():
     """Displays command line usage"""
     print "usage: " + sys.argv[0] + " [--help] [--debug] [--search string] [--count] [--verbose] [--init]"
-    print "--debug: Show debug messages"
+    print "--debug: Include debug logging messages"
     print "--search: Search a torrent in the database"
     print "--count: Display the number of torrents in the database"
     print "--verbose: Print logging messages"

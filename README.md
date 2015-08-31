@@ -112,6 +112,14 @@ To start BitTroll with Metadata scraping, RESTful API, and Web UI:
 
 2. `python main.py`
 
+To start in the background, after database is initialized:
+
+`./start.sh`
+
+To stop:
+
+`./stop.sh`
+
 The default web ui location is `http://127.0.0.1:11000`
 
 ### Running a cluster
