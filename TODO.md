@@ -11,6 +11,7 @@
 # Important
 * Add torrent file feature in UI
 * Make pagination buttons scroll to top
+* Make pagination button of current page be highlighted
 * Mobile optimized
 * Show seeds/leeches in file view
 * Store seeds/leeches in memcached to avoid using disk

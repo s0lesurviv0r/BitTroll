@@ -33,7 +33,7 @@ class Metadata:
     ]
 
     for tracker in trackers:
-        _tracker_urls += "&tr=" + tracker
+        _tracker_urls += "&tr=" + tracker + "/announce"
 
     @staticmethod
     def start():
@@ -243,7 +243,7 @@ class Metadata:
             if r.status_code == 200:
                 data = lt.bdecode(r.content)
                 info = lt.torrent_info(data)
-                Metadata.logger.info("Metadata recieved from torcahce.net (%s)" % hash)
+                Metadata.logger.info("Metadata recieved from torcache.net (%s)" % hash)
                 try:
                     Database.add(info)
                     return True
@@ -252,9 +252,9 @@ class Metadata:
             elif r.status_code == 404:
                 Metadata.logger.debug("Metadata not found on torcahce.net (%s)" % hash)
             else:
-                Metadata.logger.debug("Error while getting torrent from torcahce.net (%s)(HTTP %s)(Response: %s)" % (hash, r.status_code, r.content))
+                Metadata.logger.debug("Error while getting torrent from torcache.net (%s)(HTTP %s)(Response: %s)" % (hash, r.status_code, r.content))
         except Exception as e:
-            Metadata.logger.debug("Failed to get metadata from torcahce.net (%s)" % hash)
+            Metadata.logger.debug("Failed to get metadata from torcache.net (%s)" % hash)
 
         return False
 
