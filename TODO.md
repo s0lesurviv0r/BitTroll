@@ -6,7 +6,7 @@
 * Daemonize
 * Back button in Web UI
 * Break long torrent titles
-* Make share interval user configurable
+* Add logging to tracker_scraper.py
 
 # Important
 * Add torrent file feature in UI

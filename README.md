@@ -104,28 +104,17 @@ folder and could be easily replaced with something to suit your needs. Additiona
 web interfaces can be written to utilize BitTroll's RESTful API.
 
 ## Running
-See command line help with `python main.py -h`
+See command line help with `python main.py -h`.
 
 To start BitTroll with Metadata scraping, RESTful API, and Web UI:
 
 1. `python main.py --init`
 
-2. `python main.py --metadata --ui`
+2. `python main.py`
 
-Without specifing the host (`--host=`) and the port (`--port=`), the default web ui location is `http://127.0.0.1:11000`
+The default web ui location is `http://127.0.0.1:11000`
 
 ### Running a cluster
-Several command line arguments come into focus when running a cluster:
-
-`--ui` - Tells BitTroll to serve the Web UI on the specified/default host and port (This automatically invokes `--api`)
-
-`--api` - Tells BitTroll to serve the RESTful API on the specified/default host and port
-
-`--host` - Sets the interface for the Web UI/RESTful API to bind to (e.g. `--host=0.0.0.0`)
-
-`--port` - Sets the port for the Web UI/RESTful API to bind to (e.g. `--port=8000`)
-
-`--metadata` - Tells BitTroll to scrape for metadata and store in the database
 
 #### Sample Cluster - Single Web UI / Multiple Scrape Nodes
 In this deployment we will run a single web ui and multiple nodes to scrape for
@@ -135,6 +124,9 @@ torrent metadata. The simplest setup will use a single MySQL server.
 **config.json**
 ```
 {
+  "host": "0.0.0.0",
+  "webui": true,
+  "scrape": false,
   "db":
   {
     "mysql": {
@@ -146,8 +138,6 @@ torrent metadata. The simplest setup will use a single MySQL server.
   }
 }
 ```
-
-Run `python main.py --ui --host=0.0.0.0` on this node.
 
 This will start the web ui on this machine, binding to all network interfaces.
 
@@ -155,6 +145,9 @@ This will start the web ui on this machine, binding to all network interfaces.
 **config.json**
 ```
 {
+  "webui": false,
+  "api": false,
+  "scrape": true,
   "db":
   {
     "mysql": {
@@ -166,8 +159,6 @@ This will start the web ui on this machine, binding to all network interfaces.
   }
 }
 ```
-
-Run `python main.py --metadata` on both nodes.
 
 This will start the metadata scraping for these two nodes. They will store all torrents
 they find metatdata for into the MySQL database for the web ui to search through.
@@ -181,6 +172,10 @@ having multiple machines serve the UI is to load balance (e.g. nginx).
 **config.json**
 ```
 {
+  "host": "0.0.0.0",
+  "webui": true,
+  "api": true,
+  "scrape": true,
   "db":
   {
     "mysql": {
@@ -192,8 +187,6 @@ having multiple machines serve the UI is to load balance (e.g. nginx).
   }
 }
 ```
-
-Run `python main.py --metadata --ui --host=0.0.0.0` on each node.
 
 This will start the web ui and scraping on each node.
 

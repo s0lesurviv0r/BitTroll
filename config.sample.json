@@ -1,4 +1,9 @@
 {
+  "host": "0.0.0.0",
+  "port": 11000,
+  "webui": true,
+  "api": true,
+  "scrape": true,
   "seed_leech_interval": 21600,
   "db":
   {

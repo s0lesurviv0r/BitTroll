@@ -36,6 +36,21 @@
         <script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
         <script src="{{ url_for('static', filename='assets/js/bootstrap.min.js') }}"></script>
         <script type="text/javascript">
+          // @author http://stackoverflow.com/a/7197112/892607
+          function TextAbstract(text, length)
+          {
+            if (text == null) {
+                return "";
+            }
+            if (text.length <= length) {
+                return text;
+            }
+            text = text.substring(0, length);
+            last = text.lastIndexOf(" ");
+            text = text.substring(0, last);
+            return text + "...";
+          }
+
           function friendlyUnit(value, isSpeed)
           {
               units = [

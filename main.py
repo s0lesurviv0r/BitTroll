@@ -26,16 +26,11 @@ def signal_handler(signal, frame):
 
 def usage():
     """Displays command line usage"""
-    print "usage: " + sys.argv[0] + " [--help] [--debug] [--metadata] [--search string] [--count] [--verbose] [--api] [--ui] [--host host] [--port port] [--init] [--push] [--auth]"
+    print "usage: " + sys.argv[0] + " [--help] [--debug] [--search string] [--count] [--verbose] [--init]"
     print "--debug: Show debug messages"
-    print "--metadata: Actively search for torrent metadata by listening to DHT and resolving info hashes"
     print "--search: Search a torrent in the database"
     print "--count: Display the number of torrents in the database"
     print "--verbose: Print logging messages"
-    print "--api: Serve RESTful api"
-    print "--ui: Serve Web UI. This will automatically trigger --api"
-    print "--host: Specify IP to bind for RESTful API and Web UI"
-    print "--port: Specifiy port for RESTful API and Web UI"
     print "--init: Initialize database"
 
 if __name__ == "__main__":
@@ -45,11 +40,9 @@ if __name__ == "__main__":
 
     level = logging.INFO
     verbose = False
-    run_api = False
-    run_metadata = False
-    add_to_push = False
-    push_url = None
-    push_auth = None
+    run_api = True
+    run_metadata = True
+    run_webui = True
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hdmbscvau", ["help", "debug", "metadata", "port=", "host=", "search=", "count", "verbose", "api", "ui", "push=", "auth=", "init"])
@@ -64,8 +57,6 @@ if __name__ == "__main__":
         elif o in ("-d", "--debug"):
             level = logging.DEBUG
             API.debug = True
-        elif o in ("-m", "--metadata"):
-            run_metadata = True
         elif o in ("-v", "--verbose"):
             verbose = True
         elif o in ("-c", "--count"):
@@ -83,20 +74,6 @@ if __name__ == "__main__":
                     print "Magnet: " + torrent["magnet_link"]
                 print ""
             sys.exit(0)
-        elif o == "--port":
-            API.port = int(float(a))
-        elif o == "--host":
-            API.host = a
-        elif o in ("-a", "--api"):
-            run_api = True
-        elif o in ("-u", "--ui"):
-            run_api = True
-            API.ui = True
-        elif o == "--push":
-            add_to_push = True
-            push_url = a
-        elif o == "--auth":
-            push_auth = a
         elif o == "--init":
             Database.init_db()
             sys.exit(0)
@@ -125,19 +102,23 @@ if __name__ == "__main__":
         for logger in loggers:
             logger.addHandler(stdout_handler)
 
-    if add_to_push:
-        push = { "url": push_url, "auth": push_auth }
+    if Config._config is not None:
+        if "api" in Config._config:
+            run_api = Config._config["api"]
 
-        if Config._config is None:
-            Config._config = {}
+        if "webui" in Config._config:
+            API.ui = Config._config["webui"]
+            if API.ui:
+                run_api = True
 
-        if "share" not in Config._config:
-            Config._config["share"] = {}
+        if "scrape" in Config._config:
+            run_metadata = Config._config["scrape"]
 
-        if "push_to" not in Config._config["share"]:
-            Config._config["share"]["push_to"] = []
+        if "host" in Config._config:
+            API.host = Config._config["host"]
 
-        Config._config["share"]["push_to"].append(push)
+        if "port" in Config._config:
+            API.port = Config._config["port"]
 
     if os.path.exists("tmp"):
         shutil.rmtree("tmp")
