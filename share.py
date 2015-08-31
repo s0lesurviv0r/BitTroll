@@ -31,6 +31,7 @@ class Share:
 
     @staticmethod
     def _thread():
+        last_contacts = {}
         while Share._running:
             share_config = Config.get_key("share")
             if share_config is None:
@@ -41,6 +42,17 @@ class Share:
                 push_to = share_config["push_to"]
                 if type(push_to) == list:
                     for target in push_to:
+                        period = 300
+                        if "period" in target:
+                            period = target["period"]
+
+                        url = target["url"]
+                        if url not in last_contacts:
+                            last_contacts[url] = time.time()
+
+                        if last_contacts[url] + period > time.time():
+                            continue
+
                         auth = ""
                         if "auth" in target:
                             auth = target["auth"]

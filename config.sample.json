@@ -20,7 +20,7 @@
     "push_to": [
       {
         "auth": "ABCDEFGHIJ",
-        "url": "http://192.168.1.205:11000/push",
+        "url": "http://192.168.1.100:11000/torrents/push",
         "period": 300
       }
     ]

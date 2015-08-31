@@ -38,9 +38,64 @@ BitTroll will create the database structure when `--init` is passed on the comma
 **Database needs to be initialized before BitTroll can start.**
 
 ### Push To
-This feature will be improved and documented soon. This allows instances to share torrent metadata
-without sharing a common database. This feature allows the pushing node (sender) to share metadata
+This allows nodes to share torrent metadata without sharing a common database.
+This feature allows the pushing node (sender) to share metadata
 to receiving node by calling a RESTful API endpoint on the receiving node.
+
+Two or more nodes could all be configured to share with each other and therefore
+be synchronized. However, this is not the preferred way of synchronizing across nodes as
+will only synchronize torrent file metadata (torrent files, torrent titles, torrent file names/sizes)
+but not node generated data (torrent categories, seed/leech counts). If possible, a more efficient
+solution for keeping nodes synchronized is by configuring all nodes to use a common
+MySQL server/cluster.
+
+That being said, the push feature was designed for friends/collaborators to expand their
+torrent databases by pushing to each others nodes/clusters. Additionally, two collaborators
+could have seperate BitTroll clusters and use the push feature to share between their clusters.
+
+**Note:** The push/pull communication is over HTTP and therefore not encrypted. This is
+not necessarily a problem on a local network (LAN). In either case the traffic can be
+intercepted along it's route from node to node (especially if the nodes are communicating over the internet).
+Authentication keys will be transferred plain-text and can be intercepted in this scenario.
+One way to enable encryption is to use HTTPS, the best way to accomplish this is to put
+the RESTful API behind nginx (with SSL enabled).
+
+#### Sample configuration
+In this configuration node 1 (pushing node) will contact node 2 (receiving node) every 300 seconds
+and present a list of info hashes it has torrent files for.
+Node 2 will respond to node 1 with all the info hashes from that list that it would like.
+Finally, node 1 will then push all the requested torrent files to node 2.
+
+##### Node 1 - Pushing / Sending node
+**config.json**
+```
+{
+  "share":
+  {
+    "push_to": [
+      {
+        "auth": "ABCDEFGHIJ",
+        "url": "http://192.168.1.100:11000/torrents/push",
+        "period": 300
+      }
+    ]
+  }
+}
+```
+
+##### Node 2 - Pulling / Receiving node
+**config.json**
+```
+{
+  "share":
+  {
+    "authorized":
+    {
+      "ABCDEFGHIJ": { "push": true },
+    }
+  }
+}
+```
 
 ### Web UI
 The Web UI supplied in BitTroll is contained in a single `index.html` file. It uses the

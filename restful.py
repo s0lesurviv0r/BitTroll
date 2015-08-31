@@ -74,7 +74,9 @@ class API():
 
                 # @todo Render with query results
 
-            return render_template("index.html", title="BitTroll", samples=API._cache["samples"])
+            total = Database.torrent_count()
+
+            return render_template("index.html", title="BitTroll", samples=API._cache["samples"], total=total)
         else:
             return "Web UI has been disabled", 404
 
