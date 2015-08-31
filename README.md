@@ -60,7 +60,7 @@ Authentication keys will be transferred plain-text and can be intercepted in thi
 One way to enable encryption is to use HTTPS, the best way to accomplish this is to put
 the RESTful API behind nginx (with SSL enabled).
 
-#### Sample configuration
+#### Sample Push Configuration
 In this configuration node 1 (pushing node) will contact node 2 (receiving node) every 300 seconds
 and present a list of info hashes it has torrent files for.
 Node 2 will respond to node 1 with all the info hashes from that list that it would like.
@@ -127,7 +127,7 @@ Several command line arguments come into focus when running a cluster:
 
 `--metadata` - Tells BitTroll to scrape for metadata and store in the database
 
-#### Sample Deployement - Single Web UI / Multiple Scrape Nodes
+#### Sample Cluster - Single Web UI / Multiple Scrape Nodes
 In this deployment we will run a single web ui and multiple nodes to scrape for
 torrent metadata. The simplest setup will use a single MySQL server.
 
@@ -172,7 +172,7 @@ Run `python main.py --metadata` on both nodes.
 This will start the metadata scraping for these two nodes. They will store all torrents
 they find metatdata for into the MySQL database for the web ui to search through.
 
-#### Sample Deployement - Multiple Web UI / Scrape Nodes
+#### Sample Cluster - Multiple Web UI / Scrape Nodes
 In this deployment we will run several identical instances that will serve as both
 web ui and metadata scrapers. We will use a single MySQL database. The idea behind
 having multiple machines serve the UI is to load balance (e.g. nginx).
