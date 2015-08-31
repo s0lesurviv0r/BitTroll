@@ -17,7 +17,7 @@ class API():
     app = Flask(__name__)
     host = "127.0.0.1"
     port = 11000
-    ui = False
+    ui = True
     http_server = None
     debug = False
     _cache = {"samples": {}, "categories": {}}
