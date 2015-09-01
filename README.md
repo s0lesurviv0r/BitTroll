@@ -37,6 +37,33 @@ database to use, only put that entry in (only `mysql` or `sqlite3`).
 BitTroll will create the database structure when `--init` is passed on the command line.
 **Database needs to be initialized before BitTroll can start.**
 
+#### Sample SQLite3 Configuration
+**config.json**
+```
+{
+  "db":
+  {
+    "sqlite3": "database.s3db"
+  }
+}
+```
+
+#### Sample MySQL Configuration
+**config.json**
+```
+{
+  "db":
+  {
+    "mysql": {
+      "host": "127.0.0.1",
+      "user": "metadata",
+      "passwd": "password",
+      "db": "metadata"
+    }
+  }
+}
+```
+
 ### Scraping from Caches
 BitTroll can scrape torrent files from torrent caching services like torcache.net and btcache.me.
 
