@@ -15,7 +15,7 @@ def update():
 # @fixme Doesn't work
 @parallel
 def start():
-	run('cd bittroll; ./start.sh')
+	run('cd bittroll; nohup ./start.sh')
 
 @parallel
 def stop():
