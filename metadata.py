@@ -14,32 +14,24 @@ try:
 except:
     pass
 from database import Database
+from config import Config
+from tracker_scraper import *
+import re
 
 class Metadata:
     logger = logging.getLogger("Metadata")
     _session = None
     _running = True
     _tracker_urls = ""
-    trackers = [
-        "udp://tracker.openbittorrent.com:80",
-        "udp://open.demonii.com:1337",
-        "udp://tracker.coppersurfer.tk:6969",
-        "udp://tracker.leechers-paradise.org:6969",
-        "http://9.rarbg.com:2710",
-        "udp://tracker.istole.it:80",
-        "udp://open.demonii.com:1337",
-        "udp://tracker.blackunicorn.xyz:6969",
-        "udp://tracker.internetwarriors.net:1337"
-    ]
 
-    for tracker in trackers:
-        _tracker_urls += "&tr=" + tracker + "/announce"
+    for tracker in TRACKERS:
+        _tracker_urls += "&tr=" + tracker
 
     @staticmethod
     def start():
         # Queue of info hashs to get metadata for throught DHT/peers
         Metadata._queue = {
-            "torcache": [],
+            "cache": [],
             "peers": []
         }
 
@@ -100,7 +92,7 @@ class Metadata:
         t.start()
 
         # Start queue loop
-        t = Thread(target=Metadata._torcache_queue_loop)
+        t = Thread(target=Metadata._cache_queue_loop)
         t.daemon = True
         t.start()
 
@@ -159,7 +151,7 @@ class Metadata:
                     except:
                         Metadata.logger.critical("Failed to add metadata to database (%s)" % hash)
 
-                    # @todo Push to torcache
+                    # @todo Push to caches
 
                     # Try to remove the torrent from the queue
                     try:
@@ -181,27 +173,43 @@ class Metadata:
                     # If torrent metadata is not being downloaded from DHT/peers
                     if Metadata._session.find_torrent(alert.info_hash).is_valid() is False:
                         # If torrent not queued up to download from torcache
-                        if hash not in Metadata._queue["torcache"]:
+                        if hash not in Metadata._queue["cache"]:
                                 # If torrent not queued up tp download for DHT/peers
                                 if hash not in Metadata._queue["peers"]:
                                     # Add to queue to download from torcache
-                                    Metadata._add_to_queue("torcache", hash)
-
-                # @todo This should be outside the mysql database
-                #Database.mark_heard(hash)
+                                    Metadata._add_to_queue("cache", hash)
 
     @staticmethod
-    def _torcache_queue_loop():
-        """Will look through torcache queue and try to download torrent for torcache"""
+    def _cache_queue_loop():
+        """Will look through cacheing scrape queue and try to download torrent from torrent file caches online"""
         Metadata.logger.debug("Started torcache queue loop")
         while Metadata._running:
-            for hash in Metadata._queue["torcache"]:
-                Metadata.logger.debug("Attempting torcache scrape (%s)" % hash)
-                # @todo Check config if should scrape from torcache
-                if not Metadata._scrape_torcache(hash):
-                    # @todo Check config if should scrape from DHT/peers
+            for hash in Metadata._queue["cache"]:
+                config = Config.get_key("scrape_caches")
+                
+                if config is None:
+                    continue
+
+                if type(config) != list:
+                    continue
+
+                found = False
+
+                # @todo Loop through randomly instead
+                for cache in config:
+                    if "enabled" in cache and "pull_url" in cache and "name" in cache:
+                        if cache["enabled"]:
+                            name = cache["name"]
+                            Metadata.logger.debug("Attempting cache scrape (%s)(%s)" % (name, hash))
+                            if Metadata._scrape_cache(cache, hash):
+                                found = True
+                                break
+
+                if not found:
                     Metadata._add_to_queue("peers", hash)
-                Metadata._queue["torcache"].remove(hash)
+
+                Metadata._queue["cache"].remove(hash)
+
                 time.sleep(1)
             time.sleep(1)
 
@@ -236,25 +244,26 @@ class Metadata:
             time.sleep(1)
 
     @staticmethod
-    def _scrape_torcache(hash):
+    def _scrape_cache(cache, hash):
+        name = cache["name"]
+        url = re.sub(r'\<info\_hash\>', hash.upper(), cache["pull_url"])
         try:
-            url = "http://torcache.net/torrent/" + hash.upper() + ".torrent"
             r = requests.get(url, headers={"User-agent": "BitTroll"})
             if r.status_code == 200:
                 data = lt.bdecode(r.content)
                 info = lt.torrent_info(data)
-                Metadata.logger.info("Metadata recieved from torcache.net (%s)" % hash)
+                Metadata.logger.info("Metadata recieved from cache (%s)(%s)" % (name, hash))
                 try:
                     Database.add(info)
                     return True
                 except Exception as e:
                     Metadata.logger.critical("Failed to add metadata to database (%s)(%s)" % (hash, e.__str__()))
             elif r.status_code == 404:
-                Metadata.logger.debug("Metadata not found on torcahce.net (%s)" % hash)
+                Metadata.logger.debug("Metadata not found on cache (%s)(%s)" % (name, hash))
             else:
-                Metadata.logger.debug("Error while getting torrent from torcache.net (%s)(HTTP %s)(Response: %s)" % (hash, r.status_code, r.content))
+                Metadata.logger.debug("Error while getting torrent from cache (%s)(%s)(HTTP %s)(Response: %s)" % (name, hash, r.status_code, r.content))
         except Exception as e:
-            Metadata.logger.debug("Failed to get metadata from torcache.net (%s)" % hash)
+            Metadata.logger.debug("Failed to get metadata on cache (%s)(%s)" % (name, hash))
 
         return False
 

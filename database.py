@@ -433,18 +433,7 @@ class Database:
                         }
 
                 if len(counts.keys()) > 0:
-                    # @todo Parse magnet link for tracker to parse
-                    trackers = [
-                        "udp://tracker.openbittorrent.com:80",
-                        "udp://open.demonii.com:1337",
-                        "udp://tracker.coppersurfer.tk:6969",
-                        "udp://tracker.leechers-paradise.org:6969",
-                        "http://9.rarbg.com:2710",
-                        "udp://tracker.blackunicorn.xyz:6969",
-                        "udp://tracker.internetwarriors.net:1337"
-                    ]
-
-                    for tracker in trackers:
+                    for tracker in TRACKERS:
                         try:
                             r = scrape(tracker, counts.keys())
                             for info_hash in r.keys():

@@ -2,8 +2,19 @@ import binascii, urllib, socket, random, struct
 from bcode import bdecode
 from urlparse import urlparse, urlunsplit
 
-# @author https://github.com/erindru/m2t/blob/master/m2t/scraper.py
+TRACKERS = [
+	"udp://tracker.openbittorrent.com:80",
+	"udp://open.demonii.com:1337",
+	"udp://tracker.coppersurfer.tk:6969",
+	"udp://tracker.leechers-paradise.org:6969",
+	"http://9.rarbg.com:2710",
+	"udp://tracker.istole.it:80/announce",
+	"udp://open.demonii.com:1337",
+	"udp://tracker.blackunicorn.xyz:6969",
+	"udp://tracker.internetwarriors.net:1337"
+]
 
+# @author https://github.com/erindru/m2t/blob/master/m2t/scraper.py
 def scrape(tracker, hashes):
 	"""
 	Returns the list of seeds, peers and downloads a torrent info_hash has, according to the specified tracker

@@ -1,12 +1,13 @@
 # Critical
 * Add trackers to magnet links and parse magnet links to get trackers to scrape
-* Push to Torcache feature
-* Torcache usage configurable
+* Push to cache feature
 * Double output messages bug
 * Daemonize
 * Back button in Web UI
 * Break long torrent titles
 * Add logging to tracker_scraper.py
+* Correct tracker urls for peer scraping
+* Select cache to pull torrent from at random
 
 # Important
 * Add torrent file feature in UI

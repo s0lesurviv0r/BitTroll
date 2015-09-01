@@ -5,6 +5,20 @@
   "api": true,
   "scrape": true,
   "seed_leech_interval": 21600,
+  "scrape_caches": [
+    {
+      "name": "torcache",
+      "enabled": true,
+      "pull_url": "http://torcache.net/torrent/<info_hash>.torrent",
+      "push_url": ""
+    },
+    {
+      "name": "btcache",
+      "enabled": true,
+      "pull_url": "http://btcache.me/torrent/<info_hash>",
+      "push_url": ""
+    }
+  ],
   "db":
   {
     "sqlite3": "database.s3db",
