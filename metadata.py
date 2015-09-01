@@ -25,7 +25,7 @@ class Metadata:
     _tracker_urls = ""
 
     for tracker in TRACKERS:
-        _tracker_urls += "&tr=" + tracker
+        _tracker_urls += "&tr=" + urllib.quote_plus(tracker)
 
     @staticmethod
     def start():
@@ -186,7 +186,7 @@ class Metadata:
         while Metadata._running:
             for hash in Metadata._queue["cache"]:
                 config = Config.get_key("scrape_caches")
-                
+
                 if config is None:
                     continue
 
@@ -269,7 +269,7 @@ class Metadata:
 
     @staticmethod
     def _scrape_peers(hash):
-        magnet_link = "magnet:?xt=urn:btih:" + hash + Metadata._tracker_urls
+        magnet_link = Database.generate_magnet(hash,hash) + Metadata._tracker_urls
         params = {
             'save_path': "tmp",
             'storage_mode': lt.storage_mode_t.storage_mode_allocate

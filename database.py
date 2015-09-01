@@ -80,7 +80,7 @@ class Database:
             CREATE TABLE IF NOT EXISTS torrents
             (torrentID {0} {1} {2}, name VARCHAR(255),
             info_hash VARCHAR(255), size {4}, comment VARCHAR(1024),
-            creator VARCHAR(1024), magnet_link VARCHAR(1024), category VARCHAR(255),
+            creator VARCHAR(1024), category VARCHAR(255),
             perm_category VARCHAR(255), tags VARCHAR(1024),
             classifier_version {0}, num_files {0}, leechers {0}, seeders {0},
             leech_seed_updated {0}{3})
@@ -121,11 +121,12 @@ class Database:
         return None
 
     @staticmethod
+    def generate_magnet(name, hash):
+        return "magnet:?xt=urn:btih:" + hash.upper() + "&dn=" + name
+
+    @staticmethod
     def add(meta):
         hash = Database.convert_info_hash(meta.info_hash())
-
-        # @todo Add trackers to magnet link
-        magnet_link = "magnet:?xt=urn:btih:" + hash.upper()
 
         if Database.exists(hash):
             Database.logger.info("Already exists: (%s)(%s)" % (hash, meta.name()))
@@ -147,9 +148,9 @@ class Database:
             name = name.encode("utf-8")
 
         c.execute('''
-            INSERT INTO torrents (name, info_hash, size, comment, creator, magnet_link, num_files, category) VALUES
-            ({0},{0},{0},{0},{0},{0},{0},"")
-        '''.format(Database._placeholder), (name, hash, meta.total_size(), meta.comment(), meta.creator(), magnet_link, meta.num_files()))
+            INSERT INTO torrents (name, info_hash, size, comment, creator, num_files, category) VALUES
+            ({0},{0},{0},{0},{0},{0},"")
+        '''.format(Database._placeholder), (name, hash, meta.total_size(), meta.comment(), meta.creator(), meta.num_files()))
 
         c.execute('''
             INSERT INTO torrent_files (info_hash, torrent_file) VALUES
@@ -216,7 +217,7 @@ class Database:
             category = "%"
 
         c.execute('''
-            SELECT torrents.name, torrents.info_hash, torrents.magnet_link,
+            SELECT torrents.name, torrents.info_hash,
             torrents.category, torrents.tags, torrents.size, torrents.num_files,
             torrents.seeders, torrents.leechers
             FROM torrents
@@ -235,21 +236,18 @@ class Database:
                 pass
 
             name = torrent[0]
-
-            magnet_link = torrent[2]
-            if magnet_link is None or magnet_link == "":
-                magnet_link = "magnet:?xt=uri:btih:" + torrent[1].upper() + "&dn=" + name
+            magnet_link = Database.generate_magnet(name, torrent[1])
 
             t = {
                 "name": name,
                 "info_hash": torrent[1],
                 "magnet_link": magnet_link,
-                "category": torrent[3],
+                "category": torrent[2],
                 "tags": tags,
-                "size": torrent[5],
-                "num_files": torrent[6],
-                "seeders": torrent[7],
-                "leechers": torrent[8]
+                "size": torrent[4],
+                "num_files": torrent[5],
+                "seeders": torrent[6],
+                "leechers": torrent[7]
             }
             torrents.append(t)
 
@@ -280,21 +278,18 @@ class Database:
             files.append(f)
 
         c.execute('''
-            SELECT name, info_hash, magnet_link, category, tags, size FROM torrents
+            SELECT name, info_hash, category, tags, size FROM torrents
             WHERE info_hash = {0}
         '''.format(Database._placeholder), (info_hash,))
 
         torrent = c.fetchone()
 
         name = torrent[0]
-
-        magnet_link = torrent[2]
-        if magnet_link is None or magnet_link == "":
-            magnet_link = "magnet:?xt=urn:btih:" + torrent[1].upper() + "&dn=" + name
+        magnet_link = Database.generate_magnet(name, torrent[1])
 
         tags = []
         try:
-            tags = json.loads(torrent[4])
+            tags = json.loads(torrent[3])
         except:
             pass
 
@@ -302,10 +297,10 @@ class Database:
             "name": name,
             "info_hash": torrent[1],
             "magnet_link": magnet_link,
-            "category": torrent[3],
+            "category": torrent[2],
             "files": files,
             "tags": tags,
-            "size": torrent[5]
+            "size": torrent[4]
         }
 
         conn.close()
@@ -418,7 +413,7 @@ class Database:
                 random_function = "RANDOM()" if Database._db_type == "sqlite3" else "RAND()"
 
                 c.execute('''
-                    SELECT info_hash, magnet_link FROM torrents WHERE leech_seed_updated + {0} < {0} OR leech_seed_updated IS NULL ORDER BY {1} LIMIT 50
+                    SELECT info_hash FROM torrents WHERE leech_seed_updated + {0} < {0} OR leech_seed_updated IS NULL ORDER BY {1} LIMIT 50
                 '''.format(Database._placeholder, random_function), (timeout, time.time(),))
                 torrents = c.fetchall()
 
