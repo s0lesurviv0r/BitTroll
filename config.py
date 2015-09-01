@@ -36,7 +36,7 @@ class Config:
             if key in Config._config:
                 return Config._config[key]
 
-        Config._logger.info("Key not found (%s)" % key)
+        Config._logger.debug("Key not found (%s)" % key)
         return None
 
     @staticmethod

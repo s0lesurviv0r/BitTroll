@@ -237,7 +237,7 @@ class Metadata:
                         added_time = status.added_time
                         if int(time.time()) - int(added_time) > Metadata.metadata_timeout:
                             Metadata._session.remove_torrent(handle, lt.options_t.delete_files)
-                            Metadata.logger.info("Torrent removed for timeout (%s)" % hash)
+                            Metadata.logger.debug("Torrent removed for timeout (%s)" % hash)
                 except:
                     raise
 
@@ -271,6 +271,7 @@ class Metadata:
     def _scrape_peers(hash):
         magnet_link = Database.generate_magnet(hash,hash) + Metadata._tracker_urls
         params = {
+            'url': magnet_link,
             'save_path': "tmp",
             'storage_mode': lt.storage_mode_t.storage_mode_allocate
         }
