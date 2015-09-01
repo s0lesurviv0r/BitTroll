@@ -6,8 +6,7 @@ torrent's metadata (file names, torrent titles, file sizes, etc) to store for pu
 
 BitTroll works on Debian/Ubuntu/Fedora/Mac OS X but can be easily adapted to work on Windows (this is planned for the future).
 
-BitTroll attempts to scrape torcache.net for torrent files for info hashes it wishes to resolve.
-This is set by default but will be a config option in the next release.
+BitTroll can scrape from cache services like torcache.net for torrent files for info hashes it wishes to resolve.
 
 BitTroll attempts to classify torrents into categories using a basic classification algorithm.
 
@@ -28,7 +27,8 @@ with the `prereqs.sh` script or by running `make prereqs`.
 * Python bindings for libtorrent-rasterbar
 
 ## Configuration
-Configuration is in the `config.json` file. See `config.sample.json` for details.
+Configuration is stored in `config.json` file. See `config.sample.json` for full detail.
+Copy `config.sample.json`, save as `config.json`, and configure to your needs.
 
 ### Database
 For the database, SQLite3 is used if no database setting is found. When specifying a
@@ -36,6 +36,36 @@ database to use, only put that entry in (only `mysql` or `sqlite3`).
 
 BitTroll will create the database structure when `--init` is passed on the command line.
 **Database needs to be initialized before BitTroll can start.**
+
+### Scraping from Caches
+BitTroll can scrape torrent files from torrent caching services like torcache.net and btcache.me.
+
+#### Sample Scraping Configuration
+In this configuration both torcache.net and btcache.me are scraped for torrent files
+we're trying to resolve.
+
+**config.json**
+```
+{
+  "scrape_caches": [
+    {
+      "name": "torcache",
+      "enabled": true,
+      "pull_url": "http://torcache.net/torrent/<info_hash>.torrent",
+      "push_url": ""
+    },
+    {
+      "name": "btcache",
+      "enabled": true,
+      "pull_url": "http://btcache.me/torrent/<info_hash>",
+      "push_url": ""
+    }
+  ]
+}
+```
+
+`<info_hash>` is the placeholder in the url for the info hash. Different torrent
+cache services will have different url patterns.
 
 ### Push To
 This allows nodes to share torrent metadata without sharing a common database.

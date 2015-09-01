@@ -1,5 +1,5 @@
 # Critical
-* Add trackers to magnet links and parse magnet links to get trackers to scrape
+* Add trackers to magnet links and parse magnet links to get trackers to scrape (when peer scraping)
 * Push to cache feature
 * Double output messages bug
 * Daemonize
