@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>BitTroll by jacobzelek</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>BitTroll</h1>
+        <h2>BitTorrent Search Engine</h2>
+        <a href="https://github.com/jacobzelek/BitTroll" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1>
+<a id="bittroll" class="anchor" href="#bittroll" aria-hidden="true"><span class="octicon octicon-link"></span></a>BitTroll</h1>
+
+<p>BitTroll is an open source BitTorrent DHT scraper and search engine. BitTroll listens
+to the BitTorrent Mainline DHT for torrent info hashes and then tries to resolve the
+torrent's metadata (file names, torrent titles, file sizes, etc) to store for purposes of indexing/searching.</p>
+
+<p>BitTroll works on Debian/Ubuntu/Fedora/Mac OS X but can be easily adapted to work on Windows (this is planned for the future).</p>
+
+<p>BitTroll can scrape from cache services like torcache.net for torrent files for info hashes it wishes to resolve.</p>
+
+<p>BitTroll attempts to classify torrents into categories using a basic classification algorithm.</p>
+
+<p>BitTroll can be store data in either MySQL or SQLite3 (default).</p>
+
+<p>BitTroll can serve a web UI to search torrent data and/or serve a RESTful API to access the data.</p>
+
+<h2>
+<a id="dependencies" class="anchor" href="#dependencies" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dependencies</h2>
+
+<p>On Debian/Ubuntu/Linux Mint/Fedora/Mac OS, the dependencies can be installed
+with the <code>prereqs.sh</code> script or by running <code>make prereqs</code>.</p>
+
+<ul>
+<li>Python</li>
+<li>Flask</li>
+<li>Tornado</li>
+<li>Requests</li>
+<li>libtorrent-rasterbar</li>
+<li>Python bindings for libtorrent-rasterbar</li>
+</ul>
+
+<h2>
+<a id="configuration" class="anchor" href="#configuration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Configuration</h2>
+
+<p>Configuration is stored in <code>config.json</code> file. See <code>config.sample.json</code> for full detail.
+Copy <code>config.sample.json</code>, save as <code>config.json</code>, and configure to your needs.</p>
+
+<h3>
+<a id="database" class="anchor" href="#database" aria-hidden="true"><span class="octicon octicon-link"></span></a>Database</h3>
+
+<p>For the database, SQLite3 is used if no database setting is found. When specifying a
+database to use, only put that entry in (only <code>mysql</code> or <code>sqlite3</code>).</p>
+
+<p>BitTroll will create the database structure when <code>--init</code> is passed on the command line.
+<strong>Database needs to be initialized before BitTroll can start.</strong></p>
+
+<h4>
+<a id="sample-sqlite3-configuration" class="anchor" href="#sample-sqlite3-configuration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Sample SQLite3 Configuration</h4>
+
+<p><strong>config.json</strong></p>
+
+<pre><code>{
+  "db":
+  {
+    "sqlite3": "database.s3db"
+  }
+}
+</code></pre>
+
+<h4>
+<a id="sample-mysql-configuration" class="anchor" href="#sample-mysql-configuration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Sample MySQL Configuration</h4>
+
+<p><strong>config.json</strong></p>
+
+<pre><code>{
+  "db":
+  {
+    "mysql": {
+      "host": "127.0.0.1",
+      "user": "metadata",
+      "passwd": "password",
+      "db": "metadata"
+    }
+  }
+}
+</code></pre>
+
+<h3>
+<a id="scraping-from-caches" class="anchor" href="#scraping-from-caches" aria-hidden="true"><span class="octicon octicon-link"></span></a>Scraping from Caches</h3>
+
+<p>BitTroll can scrape torrent files from torrent caching services like torcache.net and btcache.me.</p>
+
+<h4>
+<a id="sample-scraping-configuration" class="anchor" href="#sample-scraping-configuration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Sample Scraping Configuration</h4>
+
+<p>In this configuration both torcache.net and btcache.me are scraped for torrent files
+we're trying to resolve.</p>
+
+<p><strong>config.json</strong></p>
+
+<pre><code>{
+  "scrape_caches": [
+    {
+      "name": "torcache",
+      "enabled": true,
+      "pull_url": "http://torcache.net/torrent/&lt;info_hash&gt;.torrent",
+      "push_url": ""
+    },
+    {
+      "name": "btcache",
+      "enabled": true,
+      "pull_url": "http://btcache.me/torrent/&lt;info_hash&gt;",
+      "push_url": ""
+    }
+  ]
+}
+</code></pre>
+
+<p><code>&lt;info_hash&gt;</code> is the placeholder in the url for the info hash. Different torrent
+cache services will have different url patterns.</p>
+
+<h3>
+<a id="push-to" class="anchor" href="#push-to" aria-hidden="true"><span class="octicon octicon-link"></span></a>Push To</h3>
+
+<p>This allows nodes to share torrent metadata without sharing a common database.
+This feature allows the pushing node (sender) to share metadata
+to receiving node by calling a RESTful API endpoint on the receiving node.</p>
+
+<p>Two or more nodes could all be configured to share with each other and therefore
+be synchronized. However, this is not the preferred way of synchronizing across nodes as
+will only synchronize torrent file metadata (torrent files, torrent titles, torrent file names/sizes)
+but not node generated data (torrent categories, seed/leech counts). If possible, a more efficient
+solution for keeping nodes synchronized is by configuring all nodes to use a common
+MySQL server/cluster.</p>
+
+<p>That being said, the push feature was designed for friends/collaborators to expand their
+torrent databases by pushing to each others nodes/clusters. Additionally, two collaborators
+could have seperate BitTroll clusters and use the push feature to share between their clusters.</p>
+
+<p><strong>Note:</strong> The push/pull communication is over HTTP and therefore not encrypted. This is
+not necessarily a problem on a local network (LAN). In either case the traffic can be
+intercepted along it's route from node to node (especially if the nodes are communicating over the internet).
+Authentication keys will be transferred plain-text and can be intercepted in this scenario.
+One way to enable encryption is to use HTTPS, the best way to accomplish this is to put
+the RESTful API behind nginx (with SSL enabled).</p>
+
+<h4>
+<a id="sample-push-configuration" class="anchor" href="#sample-push-configuration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Sample Push Configuration</h4>
+
+<p>In this configuration node 1 (pushing node) will contact node 2 (receiving node) every 300 seconds
+and present a list of info hashes it has torrent files for.
+Node 2 will respond to node 1 with all the info hashes from that list that it would like.
+Finally, node 1 will then push all the requested torrent files to node 2.</p>
+
+<h5>
+<a id="node-1---pushing--sending-node" class="anchor" href="#node-1---pushing--sending-node" aria-hidden="true"><span class="octicon octicon-link"></span></a>Node 1 - Pushing / Sending node</h5>
+
+<p><strong>config.json</strong></p>
+
+<pre><code>{
+  "share":
+  {
+    "push_to": [
+      {
+        "auth": "ABCDEFGHIJ",
+        "url": "http://192.168.1.100:11000/torrents/push",
+        "period": 300
+      }
+    ]
+  }
+}
+</code></pre>
+
+<h5>
+<a id="node-2---pulling--receiving-node" class="anchor" href="#node-2---pulling--receiving-node" aria-hidden="true"><span class="octicon octicon-link"></span></a>Node 2 - Pulling / Receiving node</h5>
+
+<p><strong>config.json</strong></p>
+
+<pre><code>{
+  "share":
+  {
+    "authorized":
+    {
+      "ABCDEFGHIJ": { "push": true },
+    }
+  }
+}
+</code></pre>
+
+<h3>
+<a id="web-ui" class="anchor" href="#web-ui" aria-hidden="true"><span class="octicon octicon-link"></span></a>Web UI</h3>
+
+<p>The Web UI supplied in BitTroll is contained in a single <code>index.html</code> file. It uses the
+RESTful API to communicate with the BitTroll backend. The <code>index.html</code> file is in the <code>templates</code>
+folder and could be easily replaced with something to suit your needs. Additionally, custom
+web interfaces can be written to utilize BitTroll's RESTful API.</p>
+
+<h2>
+<a id="running" class="anchor" href="#running" aria-hidden="true"><span class="octicon octicon-link"></span></a>Running</h2>
+
+<p>See command line help with <code>python main.py -h</code>.</p>
+
+<p>To start BitTroll with Metadata scraping, RESTful API, and Web UI:</p>
+
+<ol>
+<li><p><code>python main.py --init</code></p></li>
+<li><p><code>python main.py</code></p></li>
+</ol>
+
+<p>To start in the background, after database is initialized:</p>
+
+<p><code>./start.sh</code></p>
+
+<p>To stop:</p>
+
+<p><code>./stop.sh</code></p>
+
+<p>The default web ui location is <code>http://127.0.0.1:11000</code></p>
+
+<h3>
+<a id="running-a-cluster" class="anchor" href="#running-a-cluster" aria-hidden="true"><span class="octicon octicon-link"></span></a>Running a cluster</h3>
+
+<h4>
+<a id="sample-cluster---single-web-ui--multiple-scrape-nodes" class="anchor" href="#sample-cluster---single-web-ui--multiple-scrape-nodes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Sample Cluster - Single Web UI / Multiple Scrape Nodes</h4>
+
+<p>In this deployment we will run a single web ui and multiple nodes to scrape for
+torrent metadata. The simplest setup will use a single MySQL server.</p>
+
+<h5>
+<a id="node-1---web-ui" class="anchor" href="#node-1---web-ui" aria-hidden="true"><span class="octicon octicon-link"></span></a>Node 1 - Web UI</h5>
+
+<p><strong>config.json</strong></p>
+
+<pre><code>{
+  "host": "0.0.0.0",
+  "webui": true,
+  "scrape": false,
+  "db":
+  {
+    "mysql": {
+      "host": "192.168.1.100",
+      "user": "metadata",
+      "passwd": "password",
+      "db": "metadata"
+    }
+  }
+}
+</code></pre>
+
+<p>This will start the web ui on this machine, binding to all network interfaces.</p>
+
+<h5>
+<a id="node-2--3---scrape-nodes" class="anchor" href="#node-2--3---scrape-nodes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Node 2 &amp; 3 - Scrape nodes</h5>
+
+<p><strong>config.json</strong></p>
+
+<pre><code>{
+  "webui": false,
+  "api": false,
+  "scrape": true,
+  "db":
+  {
+    "mysql": {
+      "host": "192.168.1.100",
+      "user": "metadata",
+      "passwd": "password",
+      "db": "metadata"
+    }
+  }
+}
+</code></pre>
+
+<p>This will start the metadata scraping for these two nodes. They will store all torrents
+they find metatdata for into the MySQL database for the web ui to search through.</p>
+
+<h4>
+<a id="sample-cluster---multiple-web-ui--scrape-nodes" class="anchor" href="#sample-cluster---multiple-web-ui--scrape-nodes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Sample Cluster - Multiple Web UI / Scrape Nodes</h4>
+
+<p>In this deployment we will run several identical instances that will serve as both
+web ui and metadata scrapers. We will use a single MySQL database. The idea behind
+having multiple machines serve the UI is to load balance (e.g. nginx).</p>
+
+<h5>
+<a id="nodes-1-2-3" class="anchor" href="#nodes-1-2-3" aria-hidden="true"><span class="octicon octicon-link"></span></a>Nodes 1, 2, 3</h5>
+
+<p><strong>config.json</strong></p>
+
+<pre><code>{
+  "host": "0.0.0.0",
+  "webui": true,
+  "api": true,
+  "scrape": true,
+  "db":
+  {
+    "mysql": {
+      "host": "192.168.1.100",
+      "user": "metadata",
+      "passwd": "password",
+      "db": "metadata"
+    }
+  }
+}
+</code></pre>
+
+<p>This will start the web ui and scraping on each node.</p>
+
+<p>A sample load balancing nginx configuration would look like:</p>
+
+<pre><code>http {
+    upstream bittroll_webuis {
+        # Node 1
+        server 192.168.1.100:11000;
+
+        # Node 2
+        server 192.168.1.101:11000;
+
+        # Node 3
+        server 192.168.1.102:11000;
+    }
+
+    server {
+        listen 80;
+        server_name mybittorrentsearchengine.com
+
+        index index.html;
+
+        location / {
+            proxy_pass http://bittroll_webuis;
+        }
+    }
+}
+</code></pre>
+
+<p>Note: It's a good idea to use nginx caching for certain things (queries, torrent files, etc) if you
+expect high traffic.</p>
+
+<h2>
+<a id="restful-api" class="anchor" href="#restful-api" aria-hidden="true"><span class="octicon octicon-link"></span></a>RESTful API</h2>
+
+<h3>
+<a id="get-torrents" class="anchor" href="#get-torrents" aria-hidden="true"><span class="octicon octicon-link"></span></a>GET /torrents</h3>
+
+<p>Returns a JSON object with total count of search results and torrents.</p>
+
+<h4>
+<a id="parameters" class="anchor" href="#parameters" aria-hidden="true"><span class="octicon octicon-link"></span></a>Parameters</h4>
+
+<ul>
+<li>q - Search string (optional)</li>
+<li>offset - Result offset (optional)</li>
+<li>limit - Number of torrents to return (optional)</li>
+<li>category - Restrict to category (optional)</li>
+</ul>
+
+<h3>
+<a id="post-torrents" class="anchor" href="#post-torrents" aria-hidden="true"><span class="octicon octicon-link"></span></a>POST /torrents</h3>
+
+<h4>
+<a id="parameters-1" class="anchor" href="#parameters-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>Parameters</h4>
+
+<ul>
+<li>file - The torrent file to be added to the database</li>
+</ul>
+
+<h3>
+<a id="get-torrentsinfo_hashtorrent" class="anchor" href="#get-torrentsinfo_hashtorrent" aria-hidden="true"><span class="octicon octicon-link"></span></a>GET /torrents/&lt;info_hash&gt;.torrent</h3>
+
+<p>Returns the torrent file with the info hash specified.</p>
+
+<h3>
+<a id="get-torrentsinfo_hashfiles" class="anchor" href="#get-torrentsinfo_hashfiles" aria-hidden="true"><span class="octicon octicon-link"></span></a>GET /torrents/&lt;info_hash&gt;/files</h3>
+
+<p>Returns the files for the torrent under the specified info hash.</p>
+
+<h2>
+<a id="compiling-into-standalone-binary" class="anchor" href="#compiling-into-standalone-binary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Compiling into standalone binary</h2>
+
+<p>PyInstaller can be used to generate a stand alone binary of BitTroll. The feature
+is still under testing but a build can be involved with <code>make dist</code>.</p>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h2>
+
+<p>Copyright (C) 2015  Jacob Zelek <a href="mailto:jacob@jacobzelek.com">jacob@jacobzelek.com</a></p>
+
+<p>This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.</p>
+
+<p>This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.</p>
+
+<p>You should have received a copy of the GNU General Public License
+along with this program.  If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a></p>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/jacobzelek/BitTroll/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/jacobzelek/BitTroll/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/jacobzelek/BitTroll"></a> is maintained by <a href="https://github.com/jacobzelek">jacobzelek</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
