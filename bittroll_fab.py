@@ -12,7 +12,6 @@ def install():
 def update():
 	run('cd bittroll; git pull')
 
-# @fixme Doesn't work
 @parallel
 def start():
 	run('cd bittroll; nohup ./start.sh')
