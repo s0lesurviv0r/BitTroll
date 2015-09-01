@@ -12,6 +12,11 @@ def install():
 def update():
 	run('cd bittroll; git pull')
 
+def roll_update():
+	stop()
+	update()
+	start()
+
 @parallel
 def start():
 	run('cd bittroll; nohup ./start.sh')
