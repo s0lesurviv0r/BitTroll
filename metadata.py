@@ -263,7 +263,7 @@ class Metadata:
             else:
                 Metadata.logger.debug("Error while getting torrent from cache (%s)(%s)(HTTP %s)(Response: %s)" % (name, hash, r.status_code, r.content))
         except Exception as e:
-            Metadata.logger.debug("Failed to get metadata on cache (%s)(%s)" % (name, hash))
+            Metadata.logger.debug("Failed to get metadata on cache (%s)(%s)(%s)" % (name, hash, e.__str__()))
 
         return False
 

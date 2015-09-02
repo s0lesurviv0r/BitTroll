@@ -14,7 +14,7 @@
     },
     {
       "name": "btcache",
-      "enabled": true,
+      "enabled": false,
       "pull_url": "http://btcache.me/torrent/<info_hash>",
       "push_url": ""
     }
